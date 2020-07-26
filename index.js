@@ -1,38 +1,78 @@
 'use strict';
 
-const refs = {
-  days: document.querySelector('span[data-value="days"]'),
-  hours: document.querySelector('span[data-value="hours"]'),
-  mins: document.querySelector('span[data-value="mins"]'),
-  secs: document.querySelector('span[data-value="secs"]'),
-  timer: document.querySelector('#timer-1'),
-};
+class CountdownTimer {
+    constructor(obj) {
+        this.selector = obj.selector;
+        this.targetDate = obj.targetDate;
+        this.startTimer()
+    }
+    getSeconds () {
+        return Math.floor(
+            ((this.time) % (1000 * 60 )) / (1000)
+        );
+    };
 
-const targetDate = new Date('June 13, 2020').getTime();
+    getMinutes () {
+        return Math.floor(
+            ((this.time) % (1000 * 60 * 60)) / (1000 * 60)
+        );
+    };
+    
+    getHours () {
+        return Math.floor(
+            ((this.time) % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+        );
+    };
+    
+    getDays () {
+        return Math.floor((this.time) / (1000 * 60 * 60 * 24));
+    };
 
-const intervalId = setInterval(function () {
-  const currentDate = Date.now();
+    getNumbers () {
+        this.time = this.targetDate.getTime() - Date.now()
+        let date = new Date();
+        let secs = this.getSeconds(date);
+        let minutes = this.getMinutes(date);
+        let hours = this.getHours(date);
+        let days = this.getDays(date);
+        return {secs, minutes, hours, days}
+    }
 
-  const time = targetDate - currentDate;
+    getValues () {
+        
+        let numbers = this.getNumbers();
+        let secsPlace = numbers.secs < 10 ? `0${numbers.secs}` : `${numbers.secs}`;
+        let minutesPlace = numbers.minutes < 10 ? `0${numbers.minutes}` : `${numbers.minutes}`;
+        let hoursPlace = numbers.hours < 10 ? `0${numbers.hours}` : `${numbers.hours}`;
+        let n1 = this.time.toString().length;
+        let n2 = numbers.days.length;
+        let daysPlace = `${'0'.repeat(n1-n2)}${numbers.days}`;
 
-  const days = pad(Math.floor(time / (1000 * 60 * 60 * 24)));
-  const hours = pad(
-    Math.floor((time % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-  );
-  const mins = pad(Math.floor((time % (1000 * 60 * 60)) / (1000 * 60)));
-  const secs = pad(Math.floor((time % (1000 * 60)) / 1000));
+        return {secsPlace, minutesPlace, hoursPlace, daysPlace}
+    }
 
-  refs.days.textContent = `${days}`;
-  refs.hours.textContent = `${hours}`;
-  refs.mins.textContent = `${mins}`;
-  refs.secs.textContent = `${secs}`;
+    reflectTime () {
+        let numbers = this.getNumbers();
+        let values = this.getValues();
+        console.log(values)
+        
+        document.querySelector(`${this.selector} span[data-value="secs"]`).textContent = values.secsPlace;
+        document.querySelector(`${this.selector} span[data-value="minutes"]`).textContent = values.minutesPlace;
+        document.querySelector(`${this.selector} span[data-value="hours"]`).textContent = values.hoursPlace;
+        document.querySelector(`${this.selector} span[data-value="days"]`).textContent = values.daysPlace;
 
-  if (time < 0) {
-    clearInterval(intervalId);
-    refs.timer.innerHTML = '<p class="timer_finished">COUNTDOWN IS OVER!</p>';
-  }
-}, 1000);
+    
+        if (numbers.secs===0 && numbers.minutes===0 && numbers.hours===0 && numbers.days===0) {
+            clearInterval(this.timerId);
+        }
+    };
 
-function pad(value) {
-  return String(value).padStart(2, '0');
+    startTimer () {
+        this.timerId = setInterval(this.reflectTime.bind(this), 1000);
+    }
 }
+
+const timer1 = new CountdownTimer({
+    selector: '#timer-1',
+    targetDate: new Date('Jul 26, 2021'),
+});
